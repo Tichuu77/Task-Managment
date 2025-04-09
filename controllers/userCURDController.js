@@ -1,7 +1,9 @@
+const { default: mongoose } = require("mongoose");
 const User = require("../models/userModel");
 
 const getUserProfile = async (req,res) => {
-    const { userId } = req.user.id;
+   
+    const  userId  = req.user.id;
     
     if(!userId){
         return res.status(401).json({message:"Unauthorized", success:false});
@@ -11,7 +13,7 @@ const getUserProfile = async (req,res) => {
         return res.status(400).json({message:"Invalid user id", success:false});
     }
 
-    const user = await User.findById(userId).select("-password");
+    const user = await User.findById(userId).select("-password -__v");
 
     if(!user){
         return res.status(404).json({message:"User not found", success:false});

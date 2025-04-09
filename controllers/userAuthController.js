@@ -16,7 +16,7 @@ const registerUser = async (req,res) => {
 
        const existingUser = await User.findOne({email});
        if(existingUser){
-           return res.status(400).json({message:"User already exists", success:false});
+           return res.status(400).json({message:"User already exists with this email", success:false});
        }
 
        const validEmailRegx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,9 +64,11 @@ const loginUser = async (req,res) => {
             return res.status(401).json({message:"Invalid email or password", success:false});
         }
 
-        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRATION});
+        const loginUser = await User.findById(user._id).select("-password -__v");
 
-        return res.status(200).json({message:"Logged in successfully", success:true, token,user});
+        const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN});
+
+        return res.status(200).json({message:"Logged in successfully", success:true, token,user:loginUser});
 
        }
     catch(error){

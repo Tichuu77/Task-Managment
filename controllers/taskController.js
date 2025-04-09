@@ -1,11 +1,16 @@
 const { json } = require("express");
 const Task = require("../models/taskModel");
 const User = require("../models/userModel");
+const { default: mongoose } = require("mongoose");
 
 
 
 const createTask = async (req,res) => {
-    const { userId } = req.user.id;
+    const  userId  = req.user.id;
+
+    if(!req.body || req.body.length === 0){
+        return res.status(400).json({message:"No data provided", success:false});
+    }
     const { title, description } = req.body;
     try{
        if(!title){
@@ -25,16 +30,13 @@ const createTask = async (req,res) => {
        if(!user){
            return res.status(404).json({message:"User not found", success:false});
        }
-
+ 
        const existingTask = await Task.findOne({title, user: userId})
 
        if(existingTask){
            return res.status(409).json({message:"Task already exists", success:false});
        }
-
-       if(typeof JSON.parse(title) !== "string"){
-           return res.status(400).json({message:"Title must be a string", success:false});
-       }
+ 
 
        if(title.trim() === ''){
            return res.status(400).json({message:"Title cannot be empty", success:false});
@@ -45,15 +47,12 @@ const createTask = async (req,res) => {
        }
 
        if(description){
-           if(typeof JSON.parse(description) !== "string"){
-               return res.status(400).json({message:"Description must be a string", success:false});
-           }
            if(description.length > 500){
                return res.status(400).json({message:"Description cannot exceed 500 characters", success:false});
            }
        }
 
-       const newTask = new Task({title, description, user: userId});
+       const newTask = new Task({title, description, userId: userId});
        await newTask.save();
 
        if(!newTask){
@@ -70,7 +69,7 @@ const createTask = async (req,res) => {
 
 
 const getTasks = async (req,res) => {
-    const { userId } = req.user.id;
+    const  userId  = req.user.id;
     try{
 
        if(!userId){
@@ -87,7 +86,7 @@ const getTasks = async (req,res) => {
            return res.status(404).json({message:"User not found", success:false});
        }
 
-       const tasks = await Task.find({user: userId})
+       const tasks = await Task.find({userId: userId})
 
        if(!tasks){
            return res.status(200).json({message:"No tasks found",data:[], success:true});
@@ -103,16 +102,16 @@ const getTasks = async (req,res) => {
 
 
 const getTaskById = async (req,res) => {
-    const { userId } = req.user.id;
-    const { taskId } = req.params;
+    const userId  = req.user.id;
+    const { id } = req.params;
     
     try{
 
-        if(!taskId){
+        if(!id){
             return res.status(400).json({message:"Invalid task id", success:false});
        }
 
-       if(!mongoose.Types.ObjectId.isValid(taskId)){
+       if(!mongoose.Types.ObjectId.isValid(id)){
             return res.status(400).json({message:"Invalid task id", success:false});
         }
 
@@ -126,7 +125,7 @@ const getTaskById = async (req,res) => {
             return res.status(404).json({message:"User not found", success:false});
         }
         
-       const task = await Task.findById(taskId);
+       const task = await Task.findById(id);
 
        if(!task){
             return res.status(404).json({message:"Task not found", success:false});
@@ -143,17 +142,17 @@ const getTaskById = async (req,res) => {
 
 
 const updateTask = async (req,res) => {
-    const { userId } = req.user.id;
-    const { taskId } = req.params;
-    const { title, description,status } = req.body;
+    const  userId  = req.user.id;
+    const { id } = req.params;
+    const { title, description,status } =  req.body || {};
     
     try{
-
-        if(!taskId){
+       
+        if(!id){
             return res.status(400).json({message:"Invalid task id", success:false});
        }
 
-       if(!mongoose.Types.ObjectId.isValid(taskId)){
+       if(!mongoose.Types.ObjectId.isValid(id)){
             return res.status(400).json({message:"Invalid task id", success:false});
         }
 
@@ -171,45 +170,34 @@ const updateTask = async (req,res) => {
             return res.status(404).json({message:"User not found", success:false});
         }
 
-        const task = await Task.findById(taskId);
+        const task = await Task.findById(id);
         
         if(!task){
             return res.status(404).json({message:"Task not found", success:false});
         }
 
-        if(task.user.toString()!== userId.toString()){
+        if(task.userId.toString()!== userId.toString()){
             return res.status(403).json({message:"Unauthorized to update this task", success:false});
         }
 
         if(title){
 
-           let  updatedTitle = JSON.parse(title);
-
-            if(typeof updatedTitle!=='string'){
-                return res.status(400).json({message:"Invalid title format", success:false});
-            }
-
-            if(updatedTitle=="" || updatedTitle.trim()===""){
+            if(title=="" || title.trim()===""){
                 return res.status(400).json({message:"Title is required", success:false});
             }
 
-            if(updatedTitle.length>100){
+            if(title.length>100){
                 return res.status(400).json({message:"Title should not exceed 100 characters", success:false});
             }
 
-            task.title = updatedTitle;
+            task.title = title;
 
         }
 
         if(description){
 
-            let updatedDescription = JSON.parse(description);
-
-            if(typeof updatedDescription!=='string'){
-                return res.status(400).json({message:"Invalid description format", success:false});
-            }
-
-            updatedDescription = description.trim();
+            
+            let updatedDescription = description.trim();
 
             if(updatedDescription.length>500){
                 return res.status(400).json({message:"Description should not exceed 500 characters", success:false});
@@ -260,20 +248,20 @@ const updateTask = async (req,res) => {
 
 
 const deleteTask = async (req,res) => {
-    const { userId } = req.user.id;
-    const { taskId } = req.params;
+    const  userId = req.user.id;
+    const { id } = req.params;
     
     try{
        
-        if(!taskId){
+        if(!id){
             return res.status(400).json({message:"Invalid task id", success:false});
        }
 
-       if(!mongoose.Types.ObjectId.isValid(taskId)){
+       if(!mongoose.Types.ObjectId.isValid(id)){
             return res.status(400).json({message:"Invalid task id", success:false});
         }
 
-        if(!userId){
+        if(!id){
             return res.status(401).json({message:"Unauthorized", success:false});
         }
 
@@ -283,17 +271,17 @@ const deleteTask = async (req,res) => {
             return res.status(404).json({message:"User not found", success:false});
         }
 
-        const task = await Task.findById(taskId);
+        const task = await Task.findById(id);
 
         if(!task){
             return res.status(404).json({message:"Task not found", success:false});
         }
 
-        if(task.user.toString()!== userId.toString()){
+        if(task.userId.toString()!== userId.toString()){
             return res.status(403).json({message:"Unauthorized to delete this task", success:false});
         }
 
-      const deleteTask=  await task.remove();
+      const deleteTask=  await Task.findByIdAndDelete(id);
 
         if(!deleteTask){
             return res.status(500).json({message:"Failed to delete task", success:false});

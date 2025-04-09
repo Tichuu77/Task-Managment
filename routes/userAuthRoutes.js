@@ -5,6 +5,6 @@ const userAuthRouter = erpress.Router();
 
 userAuthRouter.post('/register', registerUser)
 
-userAuthRouter.get('/login', loginUser)
+userAuthRouter.post('/login', loginUser)
 
 module.exports = userAuthRouter;
