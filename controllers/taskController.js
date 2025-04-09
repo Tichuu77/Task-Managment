@@ -210,13 +210,7 @@ const updateTask = async (req,res) => {
 
         if(status){
 
-        let updatedSatus = JSON.parse(status);
-
-            if(typeof updatedSatus!=='string'){
-                return res.status(400).json({message:"Invalid status format", success:false});
-            }
-
-            updatedSatus = status.trim();
+            let updatedSatus = status.trim();
 
             updatedSatus = updatedSatus.toLowerCase();
 
