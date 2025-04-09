@@ -8,7 +8,8 @@ const uri = process.env.MONGODB_URI;
 
 const mongoDbConnection = async ()=>{
     try{
-        await mongoose.connect(process.env.MONODB_URI, {
+        console.log('Connecting to database...');
+        await mongoose.connect(process.env.MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
           });
