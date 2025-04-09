@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const mongoDbConnection = require('./config/db');
-const userAuthRouter = require('./routes/userAuthRoute');
-const userCURDRouter = require('./routes/userCURDRoute');
+const userAuthRouter = require('./routes/userAuthRoutes');
+const userCURDRouter = require('./routes/userCURDRoutes');
+const taskRouter = require('./routes/taskRoutes');
+ 
 require('dotenv').config();
  
 
@@ -26,6 +28,7 @@ app.get('/', (req, res) => {
 //routes
 app.use('/user/auth',userAuthRouter)
 app.use('/user',userCURDRouter)
+app.use('/tasks',taskRouter)
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
 })
